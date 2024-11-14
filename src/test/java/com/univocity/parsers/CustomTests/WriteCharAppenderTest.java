@@ -136,4 +136,35 @@ public class WriteCharAppenderTest{
         verify(writerSpy, never()).write((char[]) any(),anyInt(),anyInt());
     }
 
+    @Test
+    public void AppendNewLineFunctionsCorrectly() throws Exception {
+        String x = "rotten tomatoes";
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        appender.appendNewLine();
+        assertEquals("rotten tomatoes,", appender.getAndReset());
+    }
+
+    @Test
+    public void appendWithGeneralCharacter() throws Exception {
+        String x = "rotten tomatoes";
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        appender.append('?');
+        assertEquals("rotten tomatoes?", appender.getAndReset());
+    }
+
+    @Test
+    public void appendWithNewLineChar() throws Exception {
+        String x = "rotten tomatoes";
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        appender.append('\n');
+        assertEquals("rotten tomatoes,", appender.getAndReset());
+    }
+
+
 }
