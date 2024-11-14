@@ -20,6 +20,7 @@ import com.univocity.parsers.common.input.WriterCharAppender;
 public class WriteCharAppenderTest{
 
     public WriterCharAppender appender;
+    public WriterCharAppender appender2;
     StringWriter writer;
     CsvWriterSettings settings;
     @Before
@@ -38,6 +39,9 @@ public class WriteCharAppenderTest{
 
         appender = new WriterCharAppender(4,"",0, settings.getFormat());
         writer = new StringWriter();
+
+        settings.getFormat().setLineSeparator(",|");
+        appender2 = new WriterCharAppender(4,"",0, settings.getFormat());
 
     }
 
@@ -64,6 +68,25 @@ public class WriteCharAppenderTest{
         assertEquals("Santa,Claus", appender.getAndReset());
     }
 
+    @Test
+    public void testWhiteSpaceIsIgnoredWithNewLineButNoDenomarlization() throws Exception {
+        String x = "Santa\nClaus  ";
+        appender.enableDenormalizedLineEndings(false);
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespace(x.charAt(i));
+        }
+        assertEquals("Santa\nClaus", appender.getAndReset());
+    }
+
+    @Test
+    public void testWhiteSpaceIsIgnoredWithNewLineWithSecondOperator() throws Exception {
+        String x = "Santa\nClaus  ";
+        for (int i = 0; i < x.length(); i++) {
+            appender2.appendIgnoringWhitespace(x.charAt(i));
+        }
+        assertEquals("Santa,|Claus", appender2.getAndReset());
+    }
+
 
     @Test
     public void testPaddingIsIgnored() throws Exception {
@@ -76,12 +99,31 @@ public class WriteCharAppenderTest{
     }
 
     @Test
+    public void testPaddingIsIgnoredWithNewLineWithSecondOperator() throws Exception {
+        String x = "rotten\n tomatoesZZZ";
+        for (int i = 0; i < x.length(); i++) {
+            appender2.appendIgnoringPadding(x.charAt(i),'Z');
+        }
+
+        assertEquals("rotten,| tomatoes", appender2.getAndReset());
+    }
+
+    @Test
+    public void testPaddingIsIgnoredWithNewLineButNoDenomarlization() throws Exception {
+        String x = "Santa\nClausZZZZZZZ";
+        appender.enableDenormalizedLineEndings(false);
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringPadding(x.charAt(i),'Z');
+        }
+        assertEquals("Santa\nClaus", appender.getAndReset());
+    }
+
+    @Test
     public void testPaddingIsIgnoredWithNewLine() throws Exception {
         String x = "rotten\n tomatoesZZZ";
         for (int i = 0; i < x.length(); i++) {
             appender.appendIgnoringPadding(x.charAt(i),'Z');
         }
-
         assertEquals("rotten, tomatoes", appender.getAndReset());
     }
 
@@ -102,6 +144,67 @@ public class WriteCharAppenderTest{
         }
         assertEquals("rotten ,tomatoes", appender.getAndReset());
     }
+
+    @Test
+    public void testAppendIgnoringWhitespaceandPaddingButNoDenomarlization() throws Exception {
+        String x = "Santa\nClausZZ ZZ ZZ Z";
+        appender.enableDenormalizedLineEndings(false);
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        assertEquals("Santa\nClaus", appender.getAndReset());
+    }
+
+    @Test
+    public void TestappendIgnoringWhitespaceandPaddingWithNewLineAndSecondOperator() throws Exception {
+        String x = "rotten \ntomatoes Z Z  Z";
+        for (int i = 0; i < x.length(); i++) {
+            appender2.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        assertEquals("rotten ,|tomatoes", appender2.getAndReset());
+    }
+
+
+    @Test
+    public void AppendNewLineFunctionsCorrectly() throws Exception {
+        String x = "rotten tomatoes";
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        appender.appendNewLine();
+        assertEquals("rotten tomatoes,", appender.getAndReset());
+    }
+
+    @Test
+    public void AppendNewLineFunctionsCorrectlyWith2ndSeparator() throws Exception {
+        String x = "rotten tomatoes";
+        for (int i = 0; i < x.length(); i++) {
+            appender2.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        appender2.appendNewLine();
+        assertEquals("rotten tomatoes,|", appender2.getAndReset());
+    }
+
+    @Test
+    public void appendWithGeneralCharacter() throws Exception {
+        String x = "rotten tomatoes";
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        appender.append('?');
+        assertEquals("rotten tomatoes?", appender.getAndReset());
+    }
+
+    @Test
+    public void appendWithNewLineChar() throws Exception {
+        String x = "rotten tomatoes";
+        for (int i = 0; i < x.length(); i++) {
+            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
+        }
+        appender.append('\n');
+        assertEquals("rotten tomatoes,", appender.getAndReset());
+    }
+
 
     @Test
     public void WritingWithGeneralIndex() throws Exception {
@@ -136,35 +239,7 @@ public class WriteCharAppenderTest{
         verify(writerSpy, never()).write((char[]) any(),anyInt(),anyInt());
     }
 
-    @Test
-    public void AppendNewLineFunctionsCorrectly() throws Exception {
-        String x = "rotten tomatoes";
-        for (int i = 0; i < x.length(); i++) {
-            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
-        }
-        appender.appendNewLine();
-        assertEquals("rotten tomatoes,", appender.getAndReset());
-    }
 
-    @Test
-    public void appendWithGeneralCharacter() throws Exception {
-        String x = "rotten tomatoes";
-        for (int i = 0; i < x.length(); i++) {
-            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
-        }
-        appender.append('?');
-        assertEquals("rotten tomatoes?", appender.getAndReset());
-    }
-
-    @Test
-    public void appendWithNewLineChar() throws Exception {
-        String x = "rotten tomatoes";
-        for (int i = 0; i < x.length(); i++) {
-            appender.appendIgnoringWhitespaceAndPadding(x.charAt(i),'Z');
-        }
-        appender.append('\n');
-        assertEquals("rotten tomatoes,", appender.getAndReset());
-    }
 
 
 }
